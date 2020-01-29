@@ -33,6 +33,29 @@ def RandomAugmentation(input_shape, rotation_range = (-20, 20), padding = 30, hu
   outputs = tf.keras.layers.Lambda(lambda x: tf.clip_by_value(x, -1., 1.))(flipped);
   return tf.keras.Model(inputs = inputs, outputs = outputs);
 
+class ImgQueue(object):
+
+  def __init__(self, size = 10):
+
+    self.pool = list();
+    self.nxt_pos = 0;
+    self.size = size;
+
+  def empty(self):
+      
+    return len(self.pool) == 0;
+
+  def get(self):
+
+    assert len(self.pool) != 0;
+    return self.pool;
+
+  def push(self, img):
+
+    if len(self.pool) < self.size: self.pool.append(img);
+    else: self.pool[self.nxt_pos] = img;
+    self.nxt_pos = (self.nxt_pos + 1) % self.size;
+
 if __name__ == "__main__":
 
   assert True == tf.executing_eagerly();
