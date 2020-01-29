@@ -19,16 +19,28 @@ def RandomAffine(input_shape, rotation_range = (0, 0), scale_range = (1, 1), tra
   outputs = AffineLayer()(inputs,affines);
   return tf.keras.Model(inputs = inputs, outputs = outputs);
 
+def RandomAugmentation(input_shape, rotation_range = (-20, 20), padding = 30, hue = .1, sat = 1.5, bri = .1):
 
+  inputs = tf.keras.Input(input_shape);
+  rotated = RandomAffine(inputs.shape[-3:], rotation_range = rotation_range)(inputs);
+  padded = tf.keras.layers.Lambda(lambda x, p: tf.image.resize(x, [tf.shape(x)[-3] + p, tf.shape(x)[-2] + p], method = tf.image.ResizeMethod.NEAREST_NEIGHBOR), arguments = {'p': padding})(rotated);
+  cropped = tf.keras.layers.Lambda(lambda x: tf.image.random_crop(x[0], size = tf.shape(x[1])))([padded, inputs]);
+  normalized = tf.keras.layers.Lambda(lambda x: tf.math.subtract(tf.math.divide(tf.cast(x, dtype = tf.float32), 127.5), 1.))(cropped);
+  hue_aug = tf.keras.layers.Lambda(lambda x, h: tf.image.random_hue(x, h), arguments = {'h': hue})(normalized);
+  sat_aug = tf.keras.layers.Lambda(lambda x, s: tf.image.random_saturation(x, lower = 1. / s, upper = s), arguments = {'s': sat})(hue_aug);
+  bri_aug = tf.keras.layers.Lambda(lambda x, b: tf.image.random_brightness(x, b), arguments = {'b': bri})(sat_aug);
+  flipped = tf.keras.layers.Lambda(lambda x: tf.image.random_flip_left_right(x))(bri_aug);
+  outputs = tf.keras.layers.Lambda(lambda x: tf.clip_by_value(x, -1., 1.))(flipped);
+  return tf.keras.Model(inputs = inputs, outputs = outputs);
 
 if __name__ == "__main__":
 
   assert True == tf.executing_eagerly();
   import cv2;
-  (train_x, train_y), (test_x, test_y) = tf.keras.datasets.mnist.load_data();
-  img = train_x[0,...];
+  img = cv2.imread('pics/tf.png');
   inputs = tf.expand_dims(tf.constant(img), axis = 0); # add batch
-  inputs = tf.expand_dims(inputs, axis = -1); # add channel
-  affined = RandomAffine(inputs.shape[-3:], rotation_range = (20,20), scale_range = (1,1), translate_range = (1.1,1.1))(inputs);
-  cv2.imshow('affined',tf.cast(affined[0,...,0], dtype = tf.uint8).numpy());
+  for i in range(5):
+    outputs = RandomAugmentation(inputs.shape[-3:])(inputs);
+    outputs = tf.cast(tf.clip_by_value((outputs + 1) * 127.5, 0., 255.)[0], dtype = tf.uint8);
+    cv2.imshow(str(i), outputs.numpy());
   cv2.waitKey();
