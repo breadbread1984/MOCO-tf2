@@ -4,9 +4,15 @@ from math import radians;
 import tensorflow as tf;
 from AffineLayer import AffineLayer;
 
+def Encoder(input_shape):
+
+  inputs = tf.keras.Input(input_shape[-3:]);
+  model = tf.keras.applications.ResNet50(input_tensor = inputs, weights = 'imagenet', include_top = False);
+  return tf.keras.Model(inputs = inputs, outputs = model.output[0]);
+
 def RandomAffine(input_shape, rotation_range = (0, 0), scale_range = (1, 1), translate_range = (0, 0)):
 
-  inputs = tf.keras.Input(input_shape);
+  inputs = tf.keras.Input(input_shape[-3:]);
   theta = tf.keras.layers.Lambda(lambda x, a, b: tf.random.uniform((tf.shape(x)[0], 1, 1), minval = radians(a), maxval = radians(b), dtype = tf.float32), arguments = {'a': rotation_range[0], 'b': rotation_range[1]})(inputs);
   scale = tf.keras.layers.Lambda(lambda x, a, b: tf.random.uniform((tf.shape(x)[0], 1, 1), minval = a, maxval = b, dtype = tf.float32), arguments = {'a': scale_range[0], 'b': scale_range[1]})(inputs);
   t1 = tf.keras.layers.Lambda(lambda x, t: tf.random.uniform((tf.shape(x)[0], 1, 1), minval = 0, maxval = t, dtype = tf.float32), arguments = {'t': translate_range[0]})(inputs);
@@ -19,10 +25,10 @@ def RandomAffine(input_shape, rotation_range = (0, 0), scale_range = (1, 1), tra
   outputs = AffineLayer()(inputs,affines);
   return tf.keras.Model(inputs = inputs, outputs = outputs);
 
-def RandomAugmentation(input_shape, rotation_range = (-20, 20), padding = 30, hue = .1, sat = 1.5, bri = .1):
+def RandomAugmentation(input_shape, rotation_range = (-20, 20), scale_range = (0.8, 1.2), padding = 30, hue = .1, sat = 1.5, bri = .1):
 
-  inputs = tf.keras.Input(input_shape);
-  rotated = RandomAffine(inputs.shape[-3:], rotation_range = rotation_range)(inputs);
+  inputs = tf.keras.Input(input_shape[-3:]);
+  rotated = RandomAffine(inputs.shape[-3:], rotation_range = rotation_range, scale_range = scale_range)(inputs);
   padded = tf.keras.layers.Lambda(lambda x, p: tf.image.resize(x, [tf.shape(x)[-3] + p, tf.shape(x)[-2] + p], method = tf.image.ResizeMethod.NEAREST_NEIGHBOR), arguments = {'p': padding})(rotated);
   cropped = tf.keras.layers.Lambda(lambda x: tf.image.random_crop(x[0], size = tf.shape(x[1])))([padded, inputs]);
   normalized = tf.keras.layers.Lambda(lambda x: tf.math.subtract(tf.math.divide(tf.cast(x, dtype = tf.float32), 127.5), 1.))(cropped);
@@ -35,26 +41,22 @@ def RandomAugmentation(input_shape, rotation_range = (-20, 20), padding = 30, hu
 
 class ImgQueue(object):
 
-  def __init__(self, size = 10):
+  def __init__(self, trainset, predictor, size = 10):
 
-    self.pool = list();
-    self.nxt_pos = 0;
-    self.size = size;
+    self.queue = list();
+    for i in range(size):
+      data, _ = next(trainset);
+      self.queue.append(predictor(data));
 
-  def empty(self):
+  def update(self, feature):
       
-    return len(self.pool) == 0;
+    del self.queue[0];
+    self.queue.append(feature);
 
   def get(self):
 
-    assert len(self.pool) != 0;
-    return self.pool;
-
-  def push(self, img):
-
-    if len(self.pool) < self.size: self.pool.append(img);
-    else: self.pool[self.nxt_pos] = img;
-    self.nxt_pos = (self.nxt_pos + 1) % self.size;
+    # retval.shape = (10, 128)
+    return tf.stack(self.queue);
 
 if __name__ == "__main__":
 
