@@ -1,5 +1,5 @@
 # MOCO-tf2
-This project implements constrastive learning algorithm MOCO with tensorflow 2.0
+This project implements constrastive learning algorithm introduced in [Momentum Contrast for Unsupervised Visual Representation Learning](https://arxiv.org/abs/1911.05722) with tensorflow 2.0
 
 ## download dataset
 The project trains ResNet50 with constrastive learning on imagenet resized version. Download the dataset with
