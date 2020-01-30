@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os;
 import tensorflow as tf;
 import tensorflow_datasets as tfds;
 from models import Encoder, RandomAugmentation, Queue;
@@ -45,6 +46,17 @@ def main():
     f_k.set_weights(beta * f_k.get_weights() + (1 - beta) * f_q.get_weights());
     # update dictionary
     queue.update(k);
+    # write log
+    if tf.equal(optimizer.iterations % 500, 0):
+      with log.as_default():
+        tf.summary.scalar('loss', avg_loss.result(), step = optimizer.iterations);
+      print('Step #%d Loss: %.6f' % (optimizer.iterations, avg_loss.result()));
+      avg_loss.reset_states();
+    if tf.equal(optimizer.iterations % 1000, 0):
+      # save model
+      checkpoint.save(os.path.join('checkpoints', 'ckpt'));
+      if False == os.path.exists('models'): os.mkdir('models');
+      f_k.save(os.path.join('models', 'model.h5'));
 
 if __name__ == "__main__":
 
