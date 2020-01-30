@@ -9,7 +9,7 @@ def Encoder(input_shape):
   inputs = tf.keras.Input(input_shape[-3:]);
   model = tf.keras.applications.ResNet50(input_tensor = inputs, weights = 'imagenet', include_top = False);
   results = tf.keras.layers.Flatten()(model.output[0]);
-  results = tf.keras.layers.Dense(units = 128)(results);
+  results = tf.keras.layers.Dense(units = 128, kernel_initializer = tf.keras.initializers.RandomNormal(stddev = 0.02))(results);
   return tf.keras.Model(inputs = inputs, outputs = results);
 
 def RandomAffine(input_shape, rotation_range = (0, 0), scale_range = (1, 1), translate_range = (0, 0)):
