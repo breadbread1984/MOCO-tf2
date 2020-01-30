@@ -2,14 +2,12 @@
 
 import tensorflow as tf;
 import tensorflow_datasets as tfds;
-from models import RandomAugmentation;
 
 def parse_function(feature):
 
   data = feature["image"];
-  output = RandomAugmentation(data.shape[-3:], rotation_range = (-10, 10))(data);
   label = feature["label"];
-  return output, label;
+  return data, label;
 
 def download():
 
