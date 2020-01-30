@@ -8,7 +8,9 @@ def Encoder(input_shape):
 
   inputs = tf.keras.Input(input_shape[-3:]);
   model = tf.keras.applications.ResNet50(input_tensor = inputs, weights = 'imagenet', include_top = False);
-  return tf.keras.Model(inputs = inputs, outputs = model.output[0]);
+  results = tf.keras.layers.Flatten()(model.output[0]);
+  results = tf.keras.layers.Dense(units = 128)(results);
+  return tf.keras.Model(inputs = inputs, outputs = results);
 
 def RandomAffine(input_shape, rotation_range = (0, 0), scale_range = (1, 1), translate_range = (0, 0)):
 
@@ -39,7 +41,7 @@ def RandomAugmentation(input_shape, rotation_range = (-20, 20), scale_range = (0
   outputs = tf.keras.layers.Lambda(lambda x: tf.clip_by_value(x, -1., 1.))(flipped);
   return tf.keras.Model(inputs = inputs, outputs = outputs);
 
-class ImgQueue(object):
+class Queue(object):
 
   def __init__(self, trainset, predictor, size = 10):
 
