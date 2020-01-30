@@ -43,12 +43,13 @@ def RandomAugmentation(input_shape, rotation_range = (-20, 20), scale_range = (0
 
 class Queue(object):
 
-  def __init__(self, trainset, predictor, size = 10):
+  def __init__(self, trainset, encoder, batches = 10):
 
     self.queue = list();
-    for i in range(size):
+    for i in range(batches):
       data, _ = next(trainset);
-      self.queue.append(predictor(data));
+      keys = encoder(data); # keys.shape = (batch, 128)
+      self.queue.append(keys);
 
   def update(self, feature):
       
@@ -57,8 +58,9 @@ class Queue(object):
 
   def get(self):
 
-    # retval.shape = (10, 128)
-    return tf.stack(self.queue);
+    data = tf.stack(self.queue) # data.shape = (10, batch, 128)
+    data = tf.transpose(data, (1, 2, 0)); # data.shape = (bath, 128, 10)
+    return data;
 
 if __name__ == "__main__":
 
