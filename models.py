@@ -58,8 +58,7 @@ class Queue(object):
 
   def get(self):
 
-    data = tf.stack(self.queue) # data.shape = (10, batch, 128)
-    data = tf.transpose(data, (1, 2, 0)); # data.shape = (bath, 128, 10)
+    data = tf.stack(self.queue, axis = -1) # data.shape = (batch, 128, 10)
     return data;
 
 if __name__ == "__main__":
