@@ -32,6 +32,8 @@ def main():
     # two augmented versions of the same batch data
     x_q = augmentation(x); # x_q.shape = (batch, 64, 64, 3)
     x_k = augmentation(x); # x_k.shape = (batch, 64, 64, 3)
+    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_inf(x_q))), [x_q, optimizer.iterations]);
+    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_inf(x_k))), [x_k, optimizer.iterations]);
     tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(x_q))), [x_q, optimizer.iterations]);
     tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(x_k))), [x_k, optimizer.iterations]);
     with tf.GradientTape() as tape:
