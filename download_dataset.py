@@ -22,12 +22,4 @@ if __name__ == "__main__":
 
   assert tf.executing_eagerly();
   download();
-  import cv2;
-  from models import RandomAugmentation;
-  trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False));
-  image, _ = next(trainset);
-  for i in range(5):
-    augmented = RandomAugmentation(image.shape[-3:], rotation_range = (-10, 10))(image);
-    augmented = tf.cast(tf.clip_by_value((augmented + 1) * 127.5, 0., 255.)[0], dtype = tf.uint8);
-    cv2.imshow(str(i), augmented);
-  cv2.waitKey();
+

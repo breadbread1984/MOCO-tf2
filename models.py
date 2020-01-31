@@ -66,10 +66,11 @@ if __name__ == "__main__":
 
   assert True == tf.executing_eagerly();
   import cv2;
-  img = cv2.imread('pics/tf.png');
-  inputs = tf.expand_dims(tf.constant(img), axis = 0); # add batch
+  from models import RandomAugmentation;
+  trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False));
+  image, _ = next(trainset);
   for i in range(5):
-    outputs = RandomAugmentation(inputs.shape[-3:])(inputs);
-    outputs = tf.cast(tf.clip_by_value((outputs + 1) * 127.5, 0., 255.)[0], dtype = tf.uint8);
-    cv2.imshow(str(i), outputs.numpy());
+    augmented = RandomAugmentation(image.shape[-3:], rotation_range = (-10, 10))(image);
+    augmented = tf.cast(tf.clip_by_value((augmented + 1) * 127.5, 0., 255.)[0], dtype = tf.uint8);
+    cv2.imshow(str(i), augmented);
   cv2.waitKey();
