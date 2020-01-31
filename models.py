@@ -66,6 +66,7 @@ if __name__ == "__main__":
 
   assert True == tf.executing_eagerly();
   import cv2;
+  import tensorflow_datasets as tfds;
   trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False));
   image, _ = next(trainset);
   for i in range(5):
