@@ -74,6 +74,7 @@ if __name__ == "__main__":
   for i in range(8):
     image = tf.cast(tf.clip_by_value(images[i, ...] * 255., 0., 255.), dtype = tf.uint8);
     augment = tf.cast(tf.clip_by_value((augments[i, ...] + 1) * 127.5, 0., 255.), dtype = tf.uint8);
-    image = tf.concat([image,augment], axis = 2);
-    cv2.imshow(str(i), image.numpy());
+    image = tf.concat([image,augment], axis = 1).numpy();
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR);
+    cv2.imshow(str(i), image);
   cv2.waitKey();
