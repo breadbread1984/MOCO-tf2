@@ -73,5 +73,5 @@ if __name__ == "__main__":
   augmented = RandomAugmentation(image.shape[-3:], rotation_range = (-10, 10))(image);
   for i in range(8):
     img = tf.cast(tf.clip_by_value((augmented[i, ...] + 1) * 127.5, 0., 255.), dtype = tf.uint8);
-    cv2.imshow(str(i), img);
+    cv2.imshow(str(i), img.numpy());
   cv2.waitKey();
