@@ -70,11 +70,13 @@ if __name__ == "__main__":
   from download_dataset import parse_function;
   trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False).map(parse_function).batch(8));
   images, _ = next(trainset);
-  augments = RandomAugmentation(images.shape[-3:], rotation_range = (-10, 10))(images);
-  for i in range(8):
-    image = tf.cast(tf.clip_by_value(images[i, ...] * 255., 0., 255.), dtype = tf.uint8);
-    augment = tf.cast(tf.clip_by_value((augments[i, ...] + 1) * 127.5, 0., 255.), dtype = tf.uint8);
-    image = tf.concat([image,augment], axis = 1).numpy();
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR);
-    cv2.imshow(str(i), image);
-  cv2.waitKey();
+  for j in range(2):
+    augments = RandomAugmentation(images.shape[-3:], rotation_range = (-10, 10))(images);
+    for i in range(8):
+      image = tf.cast(tf.clip_by_value(images[i, ...] * 255., 0., 255.), dtype = tf.uint8);
+      augment = tf.cast(tf.clip_by_value((augments[i, ...] + 1) * 127.5, 0., 255.), dtype = tf.uint8);
+      image = tf.concat([image,augment], axis = 1).numpy();
+      image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR);
+      cv2.imshow(str(i), image);
+    cv2.waitKey();
+
