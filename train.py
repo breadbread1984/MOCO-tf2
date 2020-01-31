@@ -37,10 +37,10 @@ def main():
     with tf.GradientTape() as tape:
       q = f_q(x_q); # q.shape = (batch, 128)
       k = f_k(x_k); # k.shape = (batch, 128)
-      l_pos = tf.reshape(tf.linalg.matmul(tf.reshape(q, (-1, 1, 128)), tf.reshape(k, (-1, 128, 1))), (-1, 1)); # l_pos.shape = (batch, 1)
-      l_neg = tf.reshape(tf.linalg.matmul(tf.reshape(q, (-1, 1, 128)), queue.get()), (-1, 10)); # l_neg.shape = (batch, 10)
       tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(q))), [q, optimizer.iterations]);
       tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(k))), [k, optimizer.iterations]);
+      l_pos = tf.reshape(tf.linalg.matmul(tf.reshape(q, (-1, 1, 128)), tf.reshape(k, (-1, 128, 1))), (-1, 1)); # l_pos.shape = (batch, 1)
+      l_neg = tf.reshape(tf.linalg.matmul(tf.reshape(q, (-1, 1, 128)), queue.get()), (-1, 10)); # l_neg.shape = (batch, 10)
       logits = tf.concat([l_pos, l_neg], axis = 1); # logits.shape = (batch, 11)
       # contrastive loss
       loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits = True)(tf.zeros((batch_size,)), logits / temp);
