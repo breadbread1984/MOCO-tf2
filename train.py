@@ -41,6 +41,7 @@ def main():
       l_neg = tf.reshape(tf.linalg.matmul(tf.reshape(q, (-1, 1, 128)), queue.get()), (-1, 10)); # l_neg.shape = (batch, 10)
       logits = tf.concat([l_pos, l_neg], axis = 1); # logits.shape = (batch, 11)
       # contrastive loss
+      tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(logits))), [logits, optimizer.iterations]);
       loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits = True)(tf.zeros((batch_size,)), logits / temp);
     tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(loss))), [loss, optimizer.iterations]);
     grads = tape.gradient(loss, f_q.trainable_variables); avg_loss.update_state(loss);
