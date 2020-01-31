@@ -43,7 +43,8 @@ def main():
     grads = tape.gradient(loss, f_q.trainable_variables); avg_loss.update_state(loss);
     optimizer.apply_gradients(zip(grads, f_q.trainable_variables));
     # momentum update
-    f_k.set_weights(beta * f_k.get_weights() + (1 - beta) * f_q.get_weights());
+    for i in range(len(f_q.trainable_variables)):
+      f_k.trainable_variables[i] = beta * f_k.trainable_variables[i] + (1 - beta) * f_q.trainable_variables[i];
     # update dictionary
     queue.update(k);
     # write log
