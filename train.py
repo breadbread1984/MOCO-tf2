@@ -40,9 +40,9 @@ def main():
       logits = tf.concat([l_pos, l_neg], axis = 1); # logits.shape = (batch, 11)
       # contrastive loss
       loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits = True)(tf.zeros((batch_size,)), logits / temp);
-    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(loss))), [loss]);
+    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(loss))), [loss, optimizer.iterations]);
     grads = tape.gradient(loss, f_q.trainable_variables); avg_loss.update_state(loss);
-    [tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(grad))), grads) for grad in grads];
+    [tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(grad))), grads + [optimizer.iterations,]) for grad in grads];
     optimizer.apply_gradients(zip(grads, f_q.trainable_variables));
     # momentum update
     for i in range(len(f_q.trainable_variables)):
