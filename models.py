@@ -68,10 +68,10 @@ if __name__ == "__main__":
   import cv2;
   import tensorflow_datasets as tfds;
   from download_dataset import parse_function;
-  trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False).map(parse_function));
+  trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False).map(parse_function).batch(8));
   image, _ = next(trainset);
-  for i in range(5):
-    augmented = RandomAugmentation(image.shape[-3:], rotation_range = (-10, 10))(image);
-    augmented = tf.cast(tf.clip_by_value((augmented + 1) * 127.5, 0., 255.)[0], dtype = tf.uint8);
-    cv2.imshow(str(i), augmented);
+  augmented = RandomAugmentation(image.shape[-3:], rotation_range = (-10, 10))(image);
+  for i in range(8):
+    img = tf.cast(tf.clip_by_value((augmented[i, ...] + 1) * 127.5, 0., 255.), dtype = tf.uint8);
+    cv2.imshow(str(i), img);
   cv2.waitKey();
