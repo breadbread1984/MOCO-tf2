@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os;
+import numpy as np;
 import tensorflow as tf;
 import tensorflow_datasets as tfds;
 from models import Encoder, RandomAugmentation, Queue;
@@ -16,7 +17,7 @@ def main():
   # query and key feature extractor
   f_q = Encoder(input_shape); # update this model more frequently
   f_k = Encoder(input_shape); # update this model less frequently
-  [f_k.trainable_variables[i] = f_q.trainable_variables[i] for i in range(len(f_q.trainable_variables))];
+  f_k.set_weights(np.array(f_q.get_weights()));
   # utils for training
   optimizer = tf.keras.optimizers.Adam(0.01, decay = 0.0001);
   trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False).repeat(-1).map(parse_function).shuffle(batch_size).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE));
@@ -51,9 +52,8 @@ def main():
     [tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(grad))), grads + [optimizer.iterations,]) for grad in grads];
     optimizer.apply_gradients(zip(grads, f_q.trainable_variables));
     # momentum update
-    
-    [f_k.trainable_variables[i] = beta * f_k.trainable_variables[i] + (1 - beta) * f_q.trainable_variables[i] \
-        for i in range(len(f_q.trainable_variables))];
+    for i in range(len(f_q.trainable_variables)):
+      f_k.trainable_variables[i] = beta * f_k.trainable_variables[i] + (1 - beta) * f_q.trainable_variables[i];
     # update dictionary
     queue.update(k);
     # write log
