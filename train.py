@@ -9,7 +9,7 @@ from download_dataset import parse_function;
 
 batch_size = 100;
 input_shape = (64, 64, 3);
-temp = 0.07;
+temp = 1; #0.07;
 beta = 0.999;
 
 def main():
@@ -19,7 +19,7 @@ def main():
   f_k = Encoder(input_shape); # update this model less frequently
   f_k.set_weights(np.array(f_q.get_weights()));
   # utils for training
-  optimizer = tf.keras.optimizers.Adam(0.01, decay = 0.0001);
+  optimizer = tf.keras.optimizers.SGD(0.001, momentum = 0.9, decay = 0.0001);
   trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False).repeat(-1).map(parse_function).shuffle(batch_size).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE));
   checkpoint = tf.train.Checkpoint(model = f_k, optimizer = optimizer);
   checkpoint.restore(tf.train.latest_checkpoint('checkpoints'));
@@ -33,26 +33,21 @@ def main():
     # two augmented versions of the same batch data
     x_q = augmentation(x); # x_q.shape = (batch, 64, 64, 3)
     x_k = augmentation(x); # x_k.shape = (batch, 64, 64, 3)
-    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_inf(x_q))), [x_q, optimizer.iterations]);
-    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_inf(x_k))), [x_k, optimizer.iterations]);
-    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(x_q))), [x_q, optimizer.iterations]);
-    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(x_k))), [x_k, optimizer.iterations]);
-    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(f_q(tf.constant(np.random.normal(size = (1, 64, 64, 3)), dtype = tf.float32))))), []);
     with tf.GradientTape() as tape:
       q = f_q(x_q); # q.shape = (batch, 128)
       k = f_k(x_k); # k.shape = (batch, 128)
-      tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(q))), [q, optimizer.iterations]);
-      tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(k))), [k, optimizer.iterations]);
       l_pos = tf.reshape(tf.linalg.matmul(tf.reshape(q, (-1, 1, 128)), tf.reshape(k, (-1, 128, 1))), (-1, 1)); # l_pos.shape = (batch, 1)
       l_neg = tf.reshape(tf.linalg.matmul(tf.reshape(q, (-1, 1, 128)), queue.get()), (-1, 10)); # l_neg.shape = (batch, 10)
       logits = tf.concat([l_pos, l_neg], axis = 1); # logits.shape = (batch, 11)
       # contrastive loss
       loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits = True)(tf.zeros((batch_size,)), logits / temp);
-    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(loss))), [loss, optimizer.iterations]);
     grads = tape.gradient(loss, f_q.trainable_variables); avg_loss.update_state(loss);
     [tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(grad))), grads + [optimizer.iterations,]) for grad in grads];
+    [tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_inf(grad))), grads + [optimizer.iterations,]) for grad in grads];
+    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(f_q(tf.constant(np.random.normal(size = (1, 64, 64, 3)), dtype = tf.float32))))), [optimizer.iterations]);
     optimizer.apply_gradients(zip(grads, f_q.trainable_variables));
     # momentum update
+    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(f_q(tf.constant(np.random.normal(size = (1, 64, 64, 3)), dtype = tf.float32))))), [optimizer.iterations]);
     for i in range(len(f_q.trainable_variables)):
       f_k.trainable_variables[i] = beta * f_k.trainable_variables[i] + (1 - beta) * f_q.trainable_variables[i];
     # update dictionary
