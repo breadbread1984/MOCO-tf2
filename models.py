@@ -69,9 +69,11 @@ if __name__ == "__main__":
   import tensorflow_datasets as tfds;
   from download_dataset import parse_function;
   trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False).map(parse_function).batch(8));
-  image, _ = next(trainset);
-  augmented = RandomAugmentation(image.shape[-3:], rotation_range = (-10, 10))(image);
+  images, _ = next(trainset);
+  augments = RandomAugmentation(image.shape[-3:], rotation_range = (-10, 10))(images);
   for i in range(8):
-    img = tf.cast(tf.clip_by_value((augmented[i, ...] + 1) * 127.5, 0., 255.), dtype = tf.uint8);
-    cv2.imshow(str(i), img.numpy());
+    image = tf.cast(tf.clip_by_value(images[i, ...] * 255., 0., 255.), dtype = tf.uint8);
+    augment = tf.cast(tf.clip_by_value((augments[i, ...] + 1) * 127.5, 0., 255.), dtype = tf.uint8);
+    image = tf.concat([image,augment], axis = 2);
+    cv2.imshow(str(i), image.numpy());
   cv2.waitKey();
