@@ -8,7 +8,7 @@ def Encoder(input_shape):
 
   inputs = tf.keras.Input(input_shape[-3:]);
   model = tf.keras.applications.ResNet50(input_tensor = inputs, weights = 'imagenet', include_top = False);
-  results = tf.keras.layers.Lambda(lambda x: tf.math.reduce_mean(x, axis = (1, 2)))(model.output[0]); # results.shape = (batch, 2048)
+  results = tf.keras.layers.Lambda(lambda x: tf.math.reduce_mean(x, axis = (1, 2)))(model.outputs[0]); # results.shape = (batch, 2048)
   results = tf.keras.layers.Dense(units = 128, kernel_initializer = tf.keras.initializers.RandomNormal(stddev = 0.02))(results);
   return tf.keras.Model(inputs = inputs, outputs = results);
 
