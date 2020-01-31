@@ -27,19 +27,20 @@ def RandomAffine(input_shape, rotation_range = (0, 0), scale_range = (1, 1), tra
   outputs = AffineLayer()(inputs,affines);
   return tf.keras.Model(inputs = inputs, outputs = outputs);
 
-def RandomAugmentation(input_shape, rotation_range = (-20, 20), scale_range = (0.8, 1.2), padding = 30, hue = .1, sat = 1.5, bri = .1):
+def RandomAugmentation(input_shape, rotation_range = (-20, 20), scale_range = (0.8, 1.2), padding = 10, bri = 32./255., sat = (0.5, 1.5), hue = .2, con = (0.5, 1.5)):
 
   inputs = tf.keras.Input(input_shape[-3:]);
-  rotated = RandomAffine(inputs.shape[-3:], rotation_range = rotation_range, scale_range = scale_range)(inputs);
-  padded = tf.keras.layers.Lambda(lambda x, p: tf.image.resize(x, [tf.shape(x)[-3] + p, tf.shape(x)[-2] + p], method = tf.image.ResizeMethod.NEAREST_NEIGHBOR), arguments = {'p': padding})(rotated);
-  cropped = tf.keras.layers.Lambda(lambda x: tf.image.random_crop(x[0], size = tf.shape(x[1])))([padded, inputs]);
-  normalized = tf.keras.layers.Lambda(lambda x: tf.math.subtract(tf.math.divide(tf.cast(x, dtype = tf.float32), 127.5), 1.))(cropped);
-  hue_aug = tf.keras.layers.Lambda(lambda x, h: tf.image.random_hue(x, h), arguments = {'h': hue})(normalized);
-  sat_aug = tf.keras.layers.Lambda(lambda x, s: tf.image.random_saturation(x, lower = 1. / s, upper = s), arguments = {'s': sat})(hue_aug);
-  bri_aug = tf.keras.layers.Lambda(lambda x, b: tf.image.random_brightness(x, b), arguments = {'b': bri})(sat_aug);
-  flipped = tf.keras.layers.Lambda(lambda x: tf.image.random_flip_left_right(x))(bri_aug);
-  outputs = tf.keras.layers.Lambda(lambda x: tf.clip_by_value(x, -1., 1.))(flipped);
-  return tf.keras.Model(inputs = inputs, outputs = outputs);
+  results = RandomAffine(inputs.shape[-3:], rotation_range = rotation_range, scale_range = scale_range)(inputs);
+  results = tf.keras.layers.Lambda(lambda x, p: tf.image.resize(x, [tf.shape(x)[-3] + p, tf.shape(x)[-2] + p], method = tf.image.ResizeMethod.NEAREST_NEIGHBOR), arguments = {'p': padding})(results);
+  results = tf.keras.layers.Lambda(lambda x: tf.image.random_crop(x[0], size = tf.shape(x[1])))([results, inputs]);
+  results = tf.keras.layers.Lambda(lambda x: tf.image.random_flip_left_right(x))(results);
+  results = tf.keras.layers.Lambda(lambda x, b: tf.image.random_brightness(x, b), arguments = {'b': bri})(results);
+  results = tf.keras.layers.Lambda(lambda x, a, b: tf.image.random_saturation(x, lower = a, upper = b), arguments = {'a': sat[0], 'b': sat[1]})(results);
+  results = tf.keras.layers.Lambda(lambda x, h: tf.image.random_hue(x, h), arguments = {'h': hue})(results);
+  results = tf.keras.layers.Lambda(lambda x, a, b: tf.image.random_contrast(x, lower = a, upper = b), arguments = {'a': con[0], 'b': con[1]})(results);
+  results = tf.keras.layers.Lambda(lambda x: tf.clip_by_value(x, 0., 1.))(results);
+  results = tf.keras.layers.Lambda(lambda x: tf.math.multiply(tf.math.subtract(x, 0.5), 2.))(results);
+  return tf.keras.Model(inputs = inputs, outputs = results);
 
 class Queue(object):
 
