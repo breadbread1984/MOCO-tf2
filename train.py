@@ -37,6 +37,7 @@ def main():
     tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_inf(x_k))), [x_k, optimizer.iterations]);
     tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(x_q))), [x_q, optimizer.iterations]);
     tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(x_k))), [x_k, optimizer.iterations]);
+    tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(f_q(tf.constant(np.random.normal(size = (1, 64, 64, 3)), dtype = tf.float32))))), []);
     with tf.GradientTape() as tape:
       q = f_q(x_q); # q.shape = (batch, 128)
       k = f_k(x_k); # k.shape = (batch, 128)
