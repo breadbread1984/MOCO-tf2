@@ -5,7 +5,7 @@ import tensorflow as tf;
 
 @tf.function
 def gram_schmidt(inputs):
-  # inputs.shape = (number of eigenvector, dimension of eigenvector)
+  # inputs.shape = (number of vector, dimension of vector)
   time = tf.constant(1, dtype = tf.int32);
   def diagonalize(t, basis):
     alpha = basis[t:,...]; # alpha.shape = (N - t, D)
@@ -23,6 +23,16 @@ def gram_schmidt(inputs):
   basis = tf.math.divide(basis, tf.expand_dims(norm, axis = 1)); # basis.shape = (N, D)
   return basis;
 
+def PCA(input_shape, principal_num = 5):
+  # inputs.shape = (number of vectors, dimension of vector)
+  inputs = tf.keras.Input(input_shape[-1:]);
+  centered = tf.keras.layers.Lambda(lambda x: x - tf.math.reduce_mean(x, axis = 0, keepdims = True))(inputs);
+  centered = tf.keras.layers.Lambda(lambda x: tf.transpose(x, (1, 0)))(centered);
+  s,u,v = tf.keras.layers.Lambda(lambda x: tf.linalg.svd(x))(centered);
+  eigval = tf.keras.layers.Lambda(lambda x, n: x[...,:n] * x[...,:n], arguments = {'n': principal_num})(s);
+  eigvec = tf.keras.layers.Lambda(lambda x, n: x[...,:n], arguments = {'n': principal_num})(u);
+  return tf.keras.Model(inputs = inputs, outputs = (eigvec, eigval));
+
 def SKL():
   pass
 
@@ -31,4 +41,6 @@ if __name__ == "__main__":
   assert tf.executing_eagerly();
   a = tf.constant(np.random.normal(size = (10,128)), dtype = tf.float32);
   b = gram_schmidt(a);
-  print(gram_schmidt);
+  print(b);
+  vec, val = PCA(a.shape)(a)
+  print(vec,val)
