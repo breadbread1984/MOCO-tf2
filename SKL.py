@@ -36,7 +36,7 @@ def PCA(dimension, principal_num = 5):
 
 class SKL(tf.keras.Model):
 
-  def __init__(self, dimension, principal_num = 5):
+  def __init__(self, dimension, principal_num = -1):
       
     super(SKL, self).__init__();
     self.eigvec = None; # column vectors
@@ -66,6 +66,8 @@ class SKL(tf.keras.Model):
       s,u,v = tf.linalg.svd(R);
       self.eigvec = tf.linalg.matmul(tf.concat([self.eigvec, tf.transpose(orthogonalized, (1, 0))], axis = 1), u);
       self.sigma = s;
+      self.eigvec = self.eigvec[...,:self.principal_num];
+      self.sigma = self.sigma[...,:self.principal_num];
     return self.eigvec, self.sigma, self.mean;
 
 if __name__ == "__main__":
@@ -73,7 +75,7 @@ if __name__ == "__main__":
   assert tf.executing_eagerly();
   A = tf.constant(np.random.normal(size = (10,128)), dtype = tf.float32);
   B = tf.constant(np.random.normal(size = (15,128)), dtype = tf.float32);
-  skl = SKL(128);
+  skl = SKL(128, 5);
   eigvec, sigma, mean = skl(A);
   print(eigvec, sigma, mean);
   eigvec, sigma, mean = skl(B);
