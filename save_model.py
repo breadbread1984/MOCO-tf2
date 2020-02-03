@@ -8,9 +8,10 @@ input_shape = (64, 64, 3);
 
 def save_model():
 
+  f_q = Encoder(input_shape);
   f_k = Encoder(input_shape);
   optimizer = tf.keras.optimizers.Adam(0.01, decay = 0.0001);
-  checkpoint = tf.train.Checkpoint(model = f_k, optimizer = optimizer);
+  checkpoint = tf.train.Checkpoint(f_q = f_q, f_k = f_k, optimizer = optimizer);
   checkpoint.restore(tf.train.latest_checkpoint('checkpoints'));
   if False == os.path.exists('models'): os.mkdir('models');
   f_k.save(os.path.join('models', 'resnet50.h5'));

@@ -21,7 +21,7 @@ def main():
   # utils for training
   optimizer = tf.keras.optimizers.SGD(0.001, momentum = 0.9, decay = 0.0001);
   trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False).repeat(-1).map(parse_function).shuffle(batch_size).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE));
-  checkpoint = tf.train.Checkpoint(model = f_k, optimizer = optimizer);
+  checkpoint = tf.train.Checkpoint(f_q = f_q, f_k = f_k, optimizer = optimizer);
   checkpoint.restore(tf.train.latest_checkpoint('checkpoints'));
   log = tf.summary.create_file_writer('checkpoints');
   avg_loss = tf.keras.metrics.Mean(name = 'loss', dtype = tf.float32);
