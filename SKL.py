@@ -32,6 +32,7 @@ def PCA(dimension, principal_num = 5):
   s,u,v = tf.keras.layers.Lambda(lambda x: tf.linalg.svd(x))(centered);
   sigma = tf.keras.layers.Lambda(lambda x, n: x[...,:n], arguments = {'n': principal_num})(s);
   eigvec = tf.keras.layers.Lambda(lambda x, n: x[...,:n], arguments = {'n': principal_num})(u);
+  # the returned eigen vectors are stored in column
   return tf.keras.Model(inputs = inputs, outputs = (eigvec, sigma, mean));
 
 class SKL(tf.keras.Model):
@@ -73,10 +74,9 @@ class SKL(tf.keras.Model):
 if __name__ == "__main__":
 
   assert tf.executing_eagerly();
-  A = tf.constant(np.random.normal(size = (10,128)), dtype = tf.float32);
-  B = tf.constant(np.random.normal(size = (15,128)), dtype = tf.float32);
   skl = SKL(128, 5);
-  eigvec, sigma, mean = skl(A);
-  print(eigvec, sigma, mean);
-  eigvec, sigma, mean = skl(B);
-  print(eigvec, sigma, mean);
+  for i in range(100):
+    A = tf.constant(np.random.normal(size = (10,128)), dtype = tf.float32);
+    eigvec, sigma, mean = skl(A);
+  for i in range(1,5):
+    print(tf.linalg.matmul(eigvec[...,0:1], eigvec[...,i:i+1], transpose_a = True));
