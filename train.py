@@ -58,7 +58,7 @@ def main():
         tf.summary.scalar('loss', avg_loss.result(), step = optimizer.iterations);
       print('Step #%d Loss: %.6f' % (optimizer.iterations, avg_loss.result()));
       avg_loss.reset_states();
-    if tf.equal(optimizer.iterations % 1000, 0):
+    if tf.equal(optimizer.iterations % 5000, 0):
       # save model
       checkpoint.save(os.path.join('checkpoints', 'ckpt'));
       if False == os.path.exists('models'): os.mkdir('models');
