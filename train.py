@@ -17,7 +17,8 @@ def main():
   # query and key feature extractor
   f_q = Encoder(input_shape); # update this model more frequently
   f_k = Encoder(input_shape); # update this model less frequently
-  f_k.set_weights(np.array(f_q.get_weights()));
+  for source, target in zip(f_q.trainable_weights, f_k.trainable_weights):
+    target.assign(source)
   # utils for training
   optimizer = tf.keras.optimizers.SGD(0.001, momentum = 0.9, decay = 0.0001);
   trainset = iter(tfds.load(name = 'imagenet_resized/64x64', split = tfds.Split.TRAIN, download = False).repeat(-1).map(parse_function).shuffle(batch_size).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE));
