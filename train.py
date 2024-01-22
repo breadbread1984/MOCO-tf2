@@ -50,7 +50,7 @@ def main():
     # momentum update
     tf.debugging.Assert(tf.math.logical_not(tf.math.reduce_any(tf.math.is_nan(f_q(tf.constant(np.random.normal(size = (1, 64, 64, 3)), dtype = tf.float32))))), [optimizer.iterations]);
     for i in range(len(f_q.trainable_variables)):
-      f_k.trainable_variables[i] = beta * f_k.trainable_variables[i] + (1 - beta) * f_q.trainable_variables[i];
+      f_k.trainable_variables[i].assign(beta * f_k.trainable_variables[i] + (1 - beta) * f_q.trainable_variables[i]);
     # update dictionary
     queue.update(k);
     # write log
